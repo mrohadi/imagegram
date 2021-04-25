@@ -1,27 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
+using ImageGram.API.Interfaces;
+using ImageGram.API.Repository;
+using ImageGram.API.Services;
+using ImageGram.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace ImageGram.API
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfiguration _config;
+        public Startup(IConfiguration config)
         {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
+            _config = config;
+        } 
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -31,6 +32,22 @@ namespace ImageGram.API
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ImageGram.API", Version = "v1" });
+            });
+
+            services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddSingleton<IAuthenticationManagerService, AuthenticationManagerService>();
+
+            services.AddCors();
+
+            var tokenKey = _config.GetValue<string>("TokenKey");
+            var key = Encoding.ASCII.GetBytes(tokenKey);
+        
+            services.AddAuthentication("Basic")
+                .AddScheme<AuthenticationOptions, AuthenticationHandlerService>("Basic", null);
+
+            services.AddDbContext<ImageGramContext>(options =>
+            {
+                options.UseSqlite(_config.GetConnectionString("DefaultConnection"));
             });
         }
 
@@ -48,6 +65,7 @@ namespace ImageGram.API
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

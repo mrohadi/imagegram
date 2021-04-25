@@ -1,8 +1,13 @@
 {
   "folders": [
     {
-      "path": "."
+      "path": "ImageGram.API"
+    },
+    {
+      "path": "ImageGram.Domain"
+    },
+    {
+      "path": "ImageGram.Test"
     }
-  ],
-  "settings": {}
+  ]
 }
