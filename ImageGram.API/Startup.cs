@@ -1,4 +1,5 @@
 using System.Text;
+using ImageGram.API.Handler;
 using ImageGram.API.Interfaces;
 using ImageGram.API.Repository;
 using ImageGram.API.Services;
@@ -35,7 +36,15 @@ namespace ImageGram.API
             });
 
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IPostRepository, PostRepository>();
             services.AddSingleton<IAuthenticationManagerService, AuthenticationManagerService>();
+            services.AddTransient<IImageHandler, ImageHandler>();
+            services.AddTransient<IImageWriter, ImageWriter>();
+
+            services.AddControllersWithViews()
+                .AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );
 
             services.AddCors();
 
@@ -60,6 +69,8 @@ namespace ImageGram.API
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ImageGram.API v1"));
             }
+
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
 

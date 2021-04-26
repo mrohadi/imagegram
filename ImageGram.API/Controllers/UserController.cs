@@ -20,6 +20,8 @@ namespace ImageGram.API.Controllers
         public async Task<ActionResult<IEnumerable<Account>>> GetUsersAsync()
         {
             var user = await _repository.GetAccountsAsync();
+            if(user == null)
+                return BadRequest("User Not Found!");
 
             return Ok(user);                
         }
@@ -28,7 +30,6 @@ namespace ImageGram.API.Controllers
         public async Task<ActionResult<Account>> GetUserAsync(int accountId)
         {
             var user = await _repository.GetAccountByIdAsync(accountId);
-
             if(user == null)
                 return BadRequest("User not found!");
             
