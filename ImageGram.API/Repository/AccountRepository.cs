@@ -1,13 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using ImageGram.API.Interfaces;
 using ImageGram.Domain;
 using ImageGram.Domain.DTOs;
 using ImageGram.Domain.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace ImageGram.API.Repository
 {
@@ -19,35 +16,61 @@ namespace ImageGram.API.Repository
             _context = context;
         }
 
-        public async Task<Account> AddAccountAsync(Account account)
+        public async Task<Account> AddAccountAsync(AccountDto accountDto)
         {
-            var user = await Task.FromResult(_context.Accounts.Add(account));
+            var newUser = new Account
+            {
+                Name = accountDto.Name
+            };
+            var user = await Task.FromResult(_context
+                .Accounts
+                .Add(newUser));
             return user.Entity;
+        }
+
+        public void DeleteAccountAsync(Account account)
+        {
+            _context.Accounts.Remove(account);
         }
 
         public async Task<Account> GetAccountByIdAsync(int accountId)
         {
-            return await _context.Accounts.SingleOrDefaultAsync(x => x.AccountId == accountId);
+            return await _context
+                .Accounts
+                .Include(p => p.Posts)
+                .Include(c => c.Comments)
+                .SingleOrDefaultAsync(x => x.AccountId == accountId);
         }
 
         public async Task<Account> GetAccountByUsernameAsync(string name)
         {
-            return await _context.Accounts.SingleOrDefaultAsync(x => x.Name == name);
+            return await _context
+                .Accounts
+                .Include(p => p.Posts)
+                .Include(c => c.Comments)
+                .SingleOrDefaultAsync(x => x.Name == name);
         }
 
         public async Task<IEnumerable<Account>> GetAccountsAsync()
         {
-            return await _context.Accounts.ToListAsync();
+            return await _context
+                .Accounts
+                .Include(p => p.Posts)
+                .Include(c => c.Comments)
+                .ToListAsync();
         }
 
         public async Task<bool> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync() > 0;
+            return await _context
+                .SaveChangesAsync() > 0;
         }
 
         public async Task<bool> UserExists(string name)
         {
-            return await _context.Accounts.AnyAsync(x => x.Name == name.ToLower());
+            return await _context
+                .Accounts
+                .AnyAsync(x => x.Name == name.ToLower());
         }
     }
 }

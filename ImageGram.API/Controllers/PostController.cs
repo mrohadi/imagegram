@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using ImageGram.API.Helper;
 using ImageGram.API.Interfaces;
+using ImageGram.API.Services;
 using ImageGram.Domain.DTOs;
 using ImageGram.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,20 +12,23 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ImageGram.API.Controllers
 {
-        [Authorize]
+    [AuthenticationFilter]
     public class PostController : BaseApiController
     {
         private readonly IImageHandler _imageHandler;
         private readonly IPostRepository _postRepo;
         private readonly IAccountRepository _accountRepo;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public PostController(
             IImageHandler imageHandler,
             IPostRepository postRepo,
-            IAccountRepository accountRepo)
+            IAccountRepository accountRepo,
+            IHttpContextAccessor httpContextAccessor)
         {
             _imageHandler = imageHandler;
             _postRepo = postRepo;
             _accountRepo = accountRepo;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -61,9 +67,14 @@ namespace ImageGram.API.Controllers
             return Ok(postToReturn);
         }
 
-        [HttpPost("{accountId}")]
-        public async Task<IActionResult> AddPostAsync(IFormFile file ,int accountId)
+        [HttpPost]
+        public async Task<IActionResult> AddPostAsync(IFormFile file)
         {   
+            var tokenHeader = _httpContextAccessor.HttpContext.Request.Headers
+                .First(x => x.Key == "Authorization").Value.ToString();
+            
+            var accountId = tokenHeader.GetUserId();
+
             var imageUrl = await _imageHandler.UploadImage(file);
             if(imageUrl == null)
                 return BadRequest("Failed to Post Photo!");

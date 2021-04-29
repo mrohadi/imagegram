@@ -1,24 +1,30 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ImageGram.API.Interfaces;
+using ImageGram.API.Services;
 using ImageGram.Domain.Models;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ImageGram.API.Controllers
 {
-    [Authorize]
+    [AuthenticationFilter]
     public class UserController : BaseApiController
     {
         private readonly IAccountRepository _repository;
-        public UserController(IAccountRepository repository)
+        private readonly IHttpContextAccessor _http;
+        public string token;
+        public UserController(IAccountRepository repository, IHttpContextAccessor http)
         {
             _repository = repository;
+            _http = http;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Account>>> GetUsersAsync()
         {
+            var header = _http.HttpContext.Request.Headers.First(x => x.Key == "Authorization").Value.ToString();
             var user = await _repository.GetAccountsAsync();
             if(user == null)
                 return BadRequest("User Not Found!");
@@ -34,6 +40,6 @@ namespace ImageGram.API.Controllers
                 return BadRequest("User not found!");
             
             return Ok(user);
-        }
+        }  
     }
 }

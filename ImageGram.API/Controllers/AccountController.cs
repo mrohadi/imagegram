@@ -1,7 +1,10 @@
+using System.Linq;
 using System.Threading.Tasks;
+using ImageGram.API.Helper;
 using ImageGram.API.Interfaces;
+using ImageGram.API.Services;
 using ImageGram.Domain.DTOs;
-using ImageGram.Domain.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ImageGram.API.Controllers
@@ -9,53 +12,76 @@ namespace ImageGram.API.Controllers
     public class AccountController : BaseApiController
     {
         private readonly IAccountRepository _repository;
-        private readonly IAuthenticationManagerService _authManager;
-        public AccountController(IAccountRepository repository, IAuthenticationManagerService authManager)
+        private readonly ITokenManager _tokenManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public AccountController(
+            IAccountRepository repository, 
+            ITokenManager tokenManager,
+            IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
-            _authManager = authManager;
+            _tokenManager = tokenManager;
+            _httpContextAccessor = httpContextAccessor;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="accountDto"></param>
+        /// <returns></returns>
         [HttpPost("register")]
-        public async Task<ActionResult<UserTokenDto>> RegisterAsync([FromBody] Account account) 
+        public async Task<IActionResult> RegisterAsync([FromBody] AccountDto accountDto) 
         {
-            var user = await _repository.AddAccountAsync(account);
-            if(!await _repository.SaveChangesAsync())
-                return BadRequest("Failed to register a user!");
+            if(string.IsNullOrEmpty(accountDto.Name))
+                return BadRequest("Please privide name");
 
-            if(user.Name == null)
-                return BadRequest("Please provide name");
+            if(await _repository.UserExists(accountDto.Name))
+                return BadRequest("User already exists!");
+
+            var newUser = await _repository.AddAccountAsync(accountDto);
+
+            if(!await _repository.SaveChangesAsync())
+                return BadRequest("Failed to save new user!");
             
-            var token = _authManager.Authenticate(user);
-            
-            if(token == null)
-                return Unauthorized("Unauthorized user, please login or register!");
-            
-            return new UserTokenDto
-            {
-                Name = account.Name,
-                Token = token
-            };
+            if(!await _tokenManager.Authenticate(accountDto))
+                return Unauthorized();
+            return Ok(_tokenManager.GenerateToken(newUser));
         }
         
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="accountDto"></param>
+        /// <returns></returns>
         [HttpPost("login")]
-        public async Task<ActionResult<UserTokenDto>> LoginAsync([FromBody] Account account)
+        public async Task<IActionResult> LoginAsync([FromBody] AccountDto accountDto)
         {
-            var user = await _repository.GetAccountByUsernameAsync(account.Name);
+            var user = await _repository.GetAccountByUsernameAsync(accountDto.Name);
 
             if(user == null)
                 return Unauthorized("Login Failed, please check your name!");
             
-            var token = _authManager.Authenticate(user);
+            if(!await _tokenManager.Authenticate(accountDto))
+                return Unauthorized();
+            return Ok(_tokenManager.GenerateToken(user));
+        }
 
-            if(token == null)
-                return Unauthorized("Unauthotize user, please login or register!");
+        [AuthenticationFilter]
+        [HttpDelete("delete")]
+        public async Task<ActionResult> DeleteAccountAsync()
+        {
+            var requestToken = _httpContextAccessor.HttpContext.Request.Headers
+                .First(x => x.Key == "Authorization").Value.ToString();
+            var accountId = requestToken.GetUserId();
+
+            var user = await _repository.GetAccountByIdAsync(accountId);
             
-            return new UserTokenDto
-            {
-                Name = user.Name,
-                Token = token
-            };
+            _repository.DeleteAccountAsync(user);
+
+            if(!await _repository.SaveChangesAsync())
+                return BadRequest("Failed to delete account!");
+            return Ok("User deleted successfully!");
         }
     }
 }

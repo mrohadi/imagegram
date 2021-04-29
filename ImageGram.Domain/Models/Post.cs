@@ -10,7 +10,6 @@ namespace ImageGram.Domain.Models
         public DateTime CreatedAt { get; set; }
 
         public int AccountId { get; set; }
-        public Account Account { get; set; }
 
         public ICollection<Comment> Comments { get; set; }
     }

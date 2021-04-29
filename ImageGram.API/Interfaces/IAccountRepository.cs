@@ -7,6 +7,12 @@ namespace ImageGram.API.Interfaces
 {
     public interface IAccountRepository
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        void DeleteAccountAsync(Account account);
         Task<bool> SaveChangesAsync();
         /// <summary>
         /// Get lists of all users from account table
@@ -30,7 +36,7 @@ namespace ImageGram.API.Interfaces
         /// </summary>
         /// <param name="account"></param>
         /// <returns></returns>
-        Task<Account> AddAccountAsync(Account account);
+        Task<Account> AddAccountAsync(AccountDto accountDto);
         /// <summary>
         /// 
         /// </summary>

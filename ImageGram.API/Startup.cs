@@ -1,18 +1,15 @@
-using System.Text;
 using ImageGram.API.Handler;
 using ImageGram.API.Interfaces;
 using ImageGram.API.Repository;
 using ImageGram.API.Services;
 using ImageGram.Domain;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace ImageGram.API
@@ -25,7 +22,6 @@ namespace ImageGram.API
             _config = config;
         } 
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
 
@@ -37,9 +33,13 @@ namespace ImageGram.API
 
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IPostRepository, PostRepository>();
-            services.AddSingleton<IAuthenticationManagerService, AuthenticationManagerService>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
+
             services.AddTransient<IImageHandler, ImageHandler>();
             services.AddTransient<IImageWriter, ImageWriter>();
+
+            services.AddSingleton<ITokenManager, TokenManager>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddControllersWithViews()
                 .AddNewtonsoftJson(options =>
@@ -48,19 +48,12 @@ namespace ImageGram.API
 
             services.AddCors();
 
-            var tokenKey = _config.GetValue<string>("TokenKey");
-            var key = Encoding.ASCII.GetBytes(tokenKey);
-        
-            services.AddAuthentication("Basic")
-                .AddScheme<AuthenticationOptions, AuthenticationHandlerService>("Basic", null);
-
             services.AddDbContext<ImageGramContext>(options =>
             {
                 options.UseSqlite(_config.GetConnectionString("DefaultConnection"));
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

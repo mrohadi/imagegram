@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace ImageGram.Domain.Models
 {
@@ -9,9 +10,7 @@ namespace ImageGram.Domain.Models
         public DateTime CreateAt { get; set; }
 
         public int AccountId { get; set; }
-        public Account Account { get; set; }
 
         public int PostId { get; set; }
-        public Post Post { get; set; }
     }
 }
