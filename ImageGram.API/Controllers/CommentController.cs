@@ -28,11 +28,11 @@ namespace ImageGram.API.Controllers
         /// <param name="postId">Unique postid</param>
         /// <returns>Action result of lists all of comments</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetCommnetsAsync([FromQuery]int postId)
+        public async Task<IEnumerable<Comment>> GetCommnetsAsync([FromQuery]int postId)
         {
             var comments = await _unitOfWork.CommentRepository.GetCommentsAsync(postId);
 
-            return Ok(comments);
+            return comments;
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace ImageGram.API.Controllers
         /// <param name="commentId">Unique commnetid</param>
         /// <returns>Specific comment</returns>
         [HttpGet("{commentId}")]
-        public async Task<ActionResult<Comment>> GetSpecificComment(int commentId)
+        public async Task<ActionResult<Comment>> GetCommentAsync(int commentId)
         {
             var comment = await _unitOfWork.CommentRepository.GetCommentAsync(commentId);
             if(comment == null)
@@ -57,7 +57,7 @@ namespace ImageGram.API.Controllers
         /// <param name="dto">Comment object to post</param>
         /// <returns>Action result of comment</returns>
         [HttpPost("{postId}")]
-        public async Task<IActionResult> AddCommentAsync(int postId, [FromBody] CommentDto dto)
+        public async Task<ActionResult> AddCommentAsync(int postId, [FromBody] CommentDto dto)
         {
             var tokenHeader = _http.HttpContext.Request.Headers
                 .First(x => x.Key == "Authorization").Value.ToString();

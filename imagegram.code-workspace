@@ -9,5 +9,8 @@
     {
       "path": "ImageGram.Test"
     }
-  ]
+  ],
+  "settings": {
+    "dotnet-test-explorer.testProjectPath": "**/*Tests.csproj"
+  }
 }

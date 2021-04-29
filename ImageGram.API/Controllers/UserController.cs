@@ -28,7 +28,9 @@ namespace ImageGram.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Account>>> GetUsersAsync()
         {
-            var header = _http.HttpContext.Request.Headers.First(x => x.Key == "Authorization").Value.ToString();
+            var header = _http.HttpContext.Request.Headers
+                .First(x => x.Key == "Authorization").Value.ToString();
+                
             var user = await _unitOfWork.AccountRepository.GetAccountsAsync();
             if(user == null)
                 return BadRequest("User Not Found!");
