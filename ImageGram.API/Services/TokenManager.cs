@@ -24,19 +24,19 @@ namespace ImageGram.API.Services
 
         public async Task<bool> Authenticate(AccountDto dto)
         {
-            using (var scope = _serviceFactory.CreateScope())
-            {
-                var serviecScoped = scope.ServiceProvider.GetService<ImageGramContext>();
-                var user = await serviecScoped.Accounts.SingleOrDefaultAsync(x => x.Name == dto.Name);
+            using var scope = _serviceFactory.CreateScope();
+            var serviecScoped = scope.ServiceProvider.GetService<IUnitOfWork>();
+            var user = await serviecScoped.AccountRepository
+                .GetAccountByUsernameAsync(dto.Name);
 
-                if(user == null)
-                    return false;
-                
-                if(!string.IsNullOrEmpty(dto.Name) &&
-                    dto.Name != user.Name)
-                    return false;
-                return true;
-            }
+            if (user == null)
+                return false;
+
+            if (!string.IsNullOrEmpty(dto.Name) &&
+                dto.Name != user.Name)
+                return false;
+
+            return true;
         }
 
         public TokenDto GenerateToken(Account account)
@@ -57,6 +57,7 @@ namespace ImageGram.API.Services
         {
             if (!listTokens.Any(x => x.Token == token && x.ExpiryDate > DateTime.Now))
                 return false;
+                
             return true;
         }
     }

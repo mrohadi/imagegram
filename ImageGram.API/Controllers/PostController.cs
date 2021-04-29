@@ -15,30 +15,27 @@ namespace ImageGram.API.Controllers
     [AuthenticationFilter]
     public class PostController : BaseApiController
     {
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IImageHandler _imageHandler;
-        private readonly IPostRepository _postRepo;
-        private readonly IAccountRepository _accountRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public PostController(
+            IUnitOfWork unitOfWork,
             IImageHandler imageHandler,
-            IPostRepository postRepo,
-            IAccountRepository accountRepo,
             IHttpContextAccessor httpContextAccessor)
         {
+            _unitOfWork = unitOfWork;
             _imageHandler = imageHandler;
-            _postRepo = postRepo;
-            _accountRepo = accountRepo;
             _httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
-        /// 
+        /// Controller to get lists of all posts in the data base
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Lists of posts</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Post>>> GetPosts()
         {
-            var posts = await _postRepo.GetPostsAsync();
+            var posts = await _unitOfWork.PostRepository.GetPostsAsync();
             if(posts == null)
                 return BadRequest("Posts Not Found!");
 
@@ -46,14 +43,14 @@ namespace ImageGram.API.Controllers
         }
         
         /// <summary>
-        /// 
+        /// Controller to get specific post in the data base
         /// </summary>
-        /// <param name="postId"></param>
-        /// <returns></returns>
+        /// <param name="postId">Unique postid</param>
+        /// <returns>Specific post</returns>
         [HttpGet("{postId}")]
         public async Task<ActionResult> GetPostAsync(int postId)
         {
-            var post = await _postRepo.GetPostByIdAsync(postId);
+            var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
             if(post == null)
                 return BadRequest("Post Not Found!");
             
@@ -67,6 +64,11 @@ namespace ImageGram.API.Controllers
             return Ok(postToReturn);
         }
 
+        /// <summary>
+        /// Controller to add new post into the data base
+        /// </summary>
+        /// <param name="file">Image file to add</param>
+        /// <returns>Action resut based on all of the conditions</returns>
         [HttpPost]
         public async Task<IActionResult> AddPostAsync(IFormFile file)
         {   
@@ -76,16 +78,18 @@ namespace ImageGram.API.Controllers
             var accountId = tokenHeader.GetUserId();
 
             var imageUrl = await _imageHandler.UploadImage(file);
-            if(imageUrl == null)
-                return BadRequest("Failed to Post Photo!");
+            if(imageUrl == "Invalid image file")
+                return BadRequest("Invalid image file");
 
-            var user = await _accountRepo.GetAccountByIdAsync(accountId);
+            var user = await _unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
             if(user == null)
                 return BadRequest("User Not Found!");
 
-            await _postRepo.AddPostAsync(imageUrl, accountId); 
-            if(await _postRepo.SaveChangesAsync())
+            await _unitOfWork.PostRepository.AddPostAsync(imageUrl.ToString(), accountId); 
+            
+            if(await _unitOfWork.Complete())
                 return Ok("Post Image Successfully!");
+
             return BadRequest("Failed to Post Photo!");
         }
     }

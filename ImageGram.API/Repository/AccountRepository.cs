@@ -60,12 +60,6 @@ namespace ImageGram.API.Repository
                 .ToListAsync();
         }
 
-        public async Task<bool> SaveChangesAsync()
-        {
-            return await _context
-                .SaveChangesAsync() > 0;
-        }
-
         public async Task<bool> UserExists(string name)
         {
             return await _context

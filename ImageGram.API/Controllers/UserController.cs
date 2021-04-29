@@ -12,30 +12,39 @@ namespace ImageGram.API.Controllers
     [AuthenticationFilter]
     public class UserController : BaseApiController
     {
-        private readonly IAccountRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _http;
         public string token;
-        public UserController(IAccountRepository repository, IHttpContextAccessor http)
+        public UserController(IUnitOfWork unitOfWork, IHttpContextAccessor http)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
             _http = http;
         }
 
+        /// <summary>
+        /// Controller to get lists of all users in the data base
+        /// </summary>
+        /// <returns>List of users</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Account>>> GetUsersAsync()
         {
             var header = _http.HttpContext.Request.Headers.First(x => x.Key == "Authorization").Value.ToString();
-            var user = await _repository.GetAccountsAsync();
+            var user = await _unitOfWork.AccountRepository.GetAccountsAsync();
             if(user == null)
                 return BadRequest("User Not Found!");
 
             return Ok(user);                
         }
 
+        /// <summary>
+        /// Controller to get specific user based on their accountid
+        /// </summary>
+        /// <param name="accountId">Unique accountid</param>
+        /// <returns>Specific user</returns>
         [HttpGet("{accountId}")]
         public async Task<ActionResult<Account>> GetUserAsync(int accountId)
         {
-            var user = await _repository.GetAccountByIdAsync(accountId);
+            var user = await _unitOfWork.AccountRepository.GetAccountByIdAsync(accountId);
             if(user == null)
                 return BadRequest("User not found!");
             

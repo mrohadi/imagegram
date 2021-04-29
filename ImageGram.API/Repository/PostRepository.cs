@@ -12,10 +12,10 @@ namespace ImageGram.API.Repository
 {
     public class PostRepository : IPostRepository
     {
-        private readonly ImageGramContext _contextFactory;
-        public PostRepository(ImageGramContext contextFactory)
+        private readonly ImageGramContext _context;
+        public PostRepository(ImageGramContext context)
         {
-            _contextFactory = contextFactory;
+            _context = context;
         }
 
         public async Task<Post> AddPostAsync(string imageUrl, int accountId)
@@ -28,21 +28,21 @@ namespace ImageGram.API.Repository
                 Comments = new List<Comment> { }
             };
 
-            await _contextFactory.Posts.AddAsync(post);
+            await _context.Posts.AddAsync(post);
 
             return post;
         }
 
         public async Task Delete(int postId)
         {
-            var post = await _contextFactory.Posts
+            var post = await _context.Posts
                 .Include(c => c.Comments)
                 .SingleOrDefaultAsync(x => x.PostId == postId);
         }
 
         public async Task<Post> GetPostByIdAsync(int postId)
         {
-            return await _contextFactory.Posts
+            return await _context.Posts
                 .Where(x => x.PostId == postId)
                 .Include(c => c.Comments)
                 .OrderByDescending(x => x.Comments.Count)
@@ -51,15 +51,10 @@ namespace ImageGram.API.Repository
 
         public async Task<IEnumerable<Post>> GetPostsAsync()
         {
-            return await _contextFactory.Posts
+            return await _context.Posts
                 .Include(c => c.Comments)
                 .OrderByDescending(x => x.Comments.Count)
                 .ToListAsync();
-        }
-
-        public async Task<bool> SaveChangesAsync()
-        {
-            return await _contextFactory.SaveChangesAsync() > 0;
         }
     }
 }

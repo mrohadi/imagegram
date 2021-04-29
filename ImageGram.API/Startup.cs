@@ -31,9 +31,7 @@ namespace ImageGram.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ImageGram.API", Version = "v1" });
             });
 
-            services.AddScoped<IAccountRepository, AccountRepository>();
-            services.AddScoped<IPostRepository, PostRepository>();
-            services.AddScoped<ICommentRepository, CommentRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddTransient<IImageHandler, ImageHandler>();
             services.AddTransient<IImageWriter, ImageWriter>();

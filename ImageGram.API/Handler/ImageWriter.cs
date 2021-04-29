@@ -22,8 +22,8 @@ namespace ImageGram.API.Handler
         /// <summary>
         /// Method to check if file is image file
         /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
+        /// <param name="file">Image file to check</param>
+        /// <returns>True if the all of the conditions are met</returns>
         private static bool CheckIfImageFile(IFormFile file)
         {
             byte[] fileBytes;
@@ -39,16 +39,16 @@ namespace ImageGram.API.Handler
         /// <summary>
         /// Method to write file onto the disk
         /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
+        /// <param name="file">Image file to write</param>
+        /// <returns>Image url in static folder</returns>
         public async Task<string> WriteFile(IFormFile file)
         {
             string fileName;
             try
             {
                 var extension = "." + file.FileName.Split('.')[^1];
-                fileName = Guid.NewGuid().ToString() + extension; //Create a new Name 
-                                                              //for the file due to security reasons.
+                fileName = Guid.NewGuid().ToString() + extension; 
+
                 var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images", fileName);
 
                 using var bits = new FileStream(path, FileMode.Create);
@@ -59,7 +59,7 @@ namespace ImageGram.API.Handler
                 return e.Message;
             }
 
-            return fileName;
+            return $"https://localhost:4001/images/{fileName}";
         }
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ImageGram.API.Repository
 {
-    public class CommentRepository : ICommentRepository
+    public class CommentRepository : ICommentRepository 
     {
         private readonly ImageGramContext _context;
         public CommentRepository(ImageGramContext context)
@@ -31,7 +31,6 @@ namespace ImageGram.API.Repository
             };
 
             await _context.AddAsync(comment);
-            await _context.SaveChangesAsync();
 
             return comment;
         }
@@ -53,11 +52,6 @@ namespace ImageGram.API.Repository
                 .ToListAsync();
 
             return comments;
-        }
-
-        public Task<Comment> UpdateCommentAsync()
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

@@ -15,8 +15,7 @@ namespace ImageGram.API.Handler
 
         public async Task<string> UploadImage(IFormFile file)
         {
-            var image = await _imageWriter.UploadImage(file);
-            return $"https://localhost:4001/images/{image}";
+            return await _imageWriter.UploadImage(file);
         }
     }
 }
